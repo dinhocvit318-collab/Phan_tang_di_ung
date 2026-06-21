@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b6e7a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dị ứng β-lactam">
+<meta name="description" content="Công cụ tiếp cận dị ứng kháng sinh β-lactam: phân tầng nguy cơ, test da, gợi ý kháng sinh theo chuỗi bên R1.">
+<title>Công cụ tiếp cận dị ứng kháng sinh β-lactam</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1c2530; --muted:#5b6b7c;
+    --line:#e1e7ee; --brand:#0b6e7a; --brand2:#0a8fa0;
+    --green:#1f8a52; --greenbg:#e7f6ee;
+    --amber:#b7791f; --amberbg:#fdf3e0;
+    --red:#c0392b; --redbg:#fbe9e7;
+    --blue:#1f5fb0; --bluebg:#e9f1fb;
+    --gray:#64748b; --graybg:#eef2f6;
+    --shadow:0 1px 3px rgba(16,38,60,.08),0 8px 24px rgba(16,38,60,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+  header.top{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;
+    border-radius:16px;padding:22px 24px;box-shadow:var(--shadow)}
+  header.top h1{margin:0 0 4px;font-size:21px;font-weight:700}
+  header.top p{margin:0;font-size:13.5px;opacity:.92}
+  .disclaimer{background:#fff8e6;border:1px solid #f0d894;color:#7a5b12;
+    border-radius:12px;padding:11px 14px;font-size:12.7px;margin:14px 0 18px}
+  .disclaimer b{color:#5e4509}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .step-tag{display:inline-block;background:var(--bluebg);color:var(--blue);
+    font-size:11.5px;font-weight:700;letter-spacing:.4px;padding:3px 10px;
+    border-radius:20px;margin-bottom:10px;text-transform:uppercase}
+  h2.q{font-size:17px;margin:2px 0 4px}
+  .hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+  label.fld{display:block;font-weight:600;font-size:13.5px;margin:14px 0 6px}
+  select,input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:9px;font-size:14.5px;background:#fff;color:var(--ink)}
+  select:focus,input:focus{outline:2px solid var(--brand2);border-color:var(--brand2)}
+  .opt-grid{display:grid;gap:9px;margin-top:6px}
+  .opt{border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer;
+    display:flex;gap:11px;align-items:flex-start;transition:.12s;background:#fff}
+  .opt:hover{border-color:var(--brand2);background:#f7fcfd}
+  .opt input{margin-top:3px;accent-color:var(--brand);flex:0 0 auto}
+  .opt .ot{font-weight:600;font-size:14px}
+  .opt .od{color:var(--muted);font-size:12.6px;margin-top:2px}
+  .opt.sel{border-color:var(--brand);background:#eef9fb}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:200px}
+  .btn{appearance:none;border:none;border-radius:10px;padding:12px 20px;font-size:15px;
+    font-weight:700;cursor:pointer;transition:.15s}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-primary:hover{background:#085763}
+  .btn-ghost{background:var(--graybg);color:var(--ink)}
+  .btn-ghost:hover{background:#e2e8ef}
+  .btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .hidden{display:none}
+  /* result */
+  .verdict{border-radius:13px;padding:16px 18px;margin-bottom:14px;border-left:6px solid}
+  .verdict h3{margin:0 0 6px;font-size:16.5px}
+  .verdict p{margin:0;font-size:13.8px}
+  .v-low{background:var(--greenbg);border-color:var(--green)} .v-low h3{color:var(--green)}
+  .v-mod{background:var(--amberbg);border-color:var(--amber)} .v-mod h3{color:var(--amber)}
+  .v-high{background:var(--redbg);border-color:var(--red)} .v-high h3{color:var(--red)}
+  .v-avoid{background:#fdeaea;border-color:#7d1f17} .v-avoid h3{color:#7d1f17}
+  .v-info{background:var(--bluebg);border-color:var(--blue)} .v-info h3{color:var(--blue)}
+  .block{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:13px}
+  .block h4{margin:0 0 9px;font-size:14.5px;display:flex;align-items:center;gap:8px}
+  ul.clean{margin:6px 0 0;padding-left:20px} ul.clean li{margin:4px 0;font-size:13.6px}
+  /* antibiotic recommendation pills */
+  .abx-group{margin-bottom:13px}
+  .abx-head{font-weight:700;font-size:13px;margin:0 0 6px;display:flex;align-items:center;gap:7px}
+  .pill{display:inline-flex;flex-direction:column;border-radius:9px;padding:7px 11px;margin:0 7px 7px 0;
+    font-size:13px;border:1px solid;min-width:90px}
+  .pill b{font-size:13.4px} .pill span{font-size:11.3px;opacity:.85;margin-top:1px}
+  .p-green{background:var(--greenbg);border-color:#bfe3cf;color:#155f38}
+  .p-amber{background:var(--amberbg);border-color:#f0d894;color:#8a5a10}
+  .p-red{background:var(--redbg);border-color:#f3c4bd;color:#9e2a1e}
+  .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+  .d-green{background:var(--green)} .d-amber{background:var(--amber)} .d-red{background:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:var(--graybg);font-size:12.3px;text-transform:uppercase;letter-spacing:.3px;color:#41526a}
+  details{border:1px solid var(--line);border-radius:12px;padding:4px 14px;margin-bottom:14px;background:#fff}
+  details summary{cursor:pointer;font-weight:700;padding:10px 0;font-size:14px;color:var(--brand)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px}
+  .tag-g{background:var(--greenbg);color:var(--green)}
+  .tag-a{background:var(--amberbg);color:var(--amber)}
+  .tag-r{background:var(--redbg);color:var(--red)}
+  .progress{display:flex;gap:6px;margin:0 0 16px}
+  .progress .pstep{flex:1;height:5px;border-radius:4px;background:var(--line)}
+  .progress .pstep.on{background:var(--brand)}
+  .ref{font-size:12px;color:var(--muted)}
+  .ref li{margin:3px 0}
+  .note{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:6px}
+  .summary-box{background:#f8fafc;border:1px dashed var(--line);border-radius:10px;
+    padding:10px 14px;font-size:13px;margin-bottom:14px}
+  .summary-box b{color:var(--brand)}
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* ===== Mobile ===== */
+  @media (max-width:600px){
+    body{font-size:15.5px}
+    .wrap{padding:12px 11px 80px}
+    header.top{padding:18px 16px;border-radius:13px}
+    header.top h1{font-size:18.5px}
+    header.top p{font-size:12.8px}
+    .card{padding:16px 14px;border-radius:12px}
+    .row>div{flex:1 1 100%;min-width:0}
+    h2.q{font-size:16px}
+    .opt{padding:13px 13px}           /* vùng chạm rộng hơn */
+    .opt .ot{font-size:14.5px}
+    .btn{width:100%;padding:14px 18px;font-size:15.5px}
+    .btn-row{flex-direction:column}
+    .pill{min-width:0;width:100%;margin-right:0}
+    table{font-size:12.5px}
+    th,td{padding:6px 7px}
+    details{padding:2px 12px}
+  }
+  @media print{
+    .btn-row,.progress,.disclaimer{display:none!important}
+    .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Công cụ tiếp cận dị ứng kháng sinh nhóm β-lactam</h1>
+    <p>Phân tầng nguy cơ theo tiền sử → chỉ định &amp; diễn giải test da (lẩy da, nội bì) → gợi ý lựa chọn kháng sinh tiếp theo dựa trên tương đồng chuỗi bên (side-chain). Áp dụng cho người lớn &amp; trẻ em.</p>
+  </header>
+
+  <div class="disclaimer">
+    <b>⚕ Lưu ý sử dụng.</b> Công cụ hỗ trợ ra quyết định mang tính tham khảo học thuật, tổng hợp từ JAMA 2019, NEJM 2019, Khan 2019 (JACI-IP) và đồng thuận quốc tế. <b>Không thay thế đánh giá lâm sàng trực tiếp.</b> Mọi test da và test kích thích (challenge) phải thực hiện tại cơ sở có đủ phương tiện cấp cứu phản vệ, bởi nhân viên được đào tạo. Quyết định cuối cùng thuộc về bác sĩ điều trị.
+  </div>
+
+  <div class="progress">
+    <div class="pstep on" id="ps1"></div>
+    <div class="pstep" id="ps2"></div>
+    <div class="pstep" id="ps3"></div>
+  </div>
+
+  <!-- ====================== STEP 1: HISTORY ====================== -->
+  <section id="step1" class="card">
+    <span class="step-tag">Bước 1 · Tiền sử dị ứng</span>
+    <h2 class="q">Đặc điểm bệnh nhân &amp; phản ứng đã ghi nhận</h2>
+    <p class="hint">Nhập đặc điểm lâm sàng của phản ứng nghi ngờ với β-lactam. Công cụ sẽ tự phân tầng nguy cơ.</p>
+
+    <div class="row">
+      <div>
+        <label class="fld">Đối tượng</label>
+        <select id="pop">
+          <option value="adult">Người lớn</option>
+          <option value="child">Trẻ em</option>
+        </select>
+      </div>
+      <div>
+        <label class="fld">Kháng sinh nghi ngờ gây phản ứng (thuốc chỉ điểm)</label>
+        <select id="indexDrug"></select>
+      </div>
+    </div>
+
+    <label class="fld">1. Kiểu/đặc điểm phản ứng đã xảy ra</label>
+    <div class="opt-grid" id="reacType"></div>
+
+    <label class="fld">2. Thời điểm khởi phát sau khi dùng thuốc</label>
+    <div class="opt-grid" id="timing">
+      <label class="opt"><input type="radio" name="timing" value="immediate"><span><span class="ot">Tức thì (≤ 1–6 giờ)</span><span class="od">Gợi ý cơ chế qua IgE</span></span></label>
+      <label class="opt"><input type="radio" name="timing" value="delayed"><span><span class="ot">Muộn (&gt; 6 giờ – nhiều ngày)</span><span class="od">Gợi ý cơ chế qua tế bào T</span></span></label>
+      <label class="opt"><input type="radio" name="timing" value="unknown"><span><span class="ot">Không rõ / không nhớ</span><span class="od">Tiền sử mơ hồ</span></span></label>
+    </div>
+
+    <label class="fld">3. Thời gian kể từ phản ứng đến nay</label>
+    <div class="opt-grid" id="recency">
+      <label class="opt"><input type="radio" name="recency" value="recent"><span><span class="ot">&lt; 1 năm</span></span></label>
+      <label class="opt"><input type="radio" name="recency" value="mid"><span><span class="ot">1 – 10 năm</span></span></label>
+      <label class="opt"><input type="radio" name="recency" value="remote"><span><span class="ot">&gt; 10 năm</span><span class="od">Độ nhạy cảm IgE giảm dần theo thời gian</span></span></label>
+    </div>
+
+    <label class="fld">4. Yếu tố nguy cơ bổ sung (chọn nếu có)</label>
+    <div class="opt-grid" id="flags">
+      <label class="opt"><input type="checkbox" value="multi"><span><span class="ot">Phản ứng với ≥ 2 nhóm β-lactam khác nhau</span></span></label>
+      <label class="opt"><input type="checkbox" value="priorpos"><span><span class="ot">Đã từng test da dương tính trước đây</span></span></label>
+      <label class="opt"><input type="checkbox" value="recur"><span><span class="ot">Phản ứng tái diễn nhiều lần khi dùng lại</span></span></label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep2()">Phân tầng nguy cơ →</button>
+      <button class="btn btn-ghost" onclick="resetAll()">Làm lại</button>
+    </div>
+  </section>
+
+  <!-- ====================== STEP 2: RISK + TEST ====================== -->
+  <section id="step2" class="card hidden">
+    <span class="step-tag">Bước 2 · Phân tầng &amp; test da</span>
+    <div id="riskVerdict"></div>
+    <div id="testInputArea"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="backTo(1)">← Quay lại tiền sử</button>
+      <button class="btn btn-primary" id="toResultBtn" onclick="goStep3()">Xem khuyến cáo kháng sinh →</button>
+    </div>
+  </section>
+
+  <!-- ====================== STEP 3: RESULT ====================== -->
+  <section id="step3" class="card hidden">
+    <span class="step-tag">Bước 3 · Khuyến cáo</span>
+    <div id="result"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="backTo(2)">← Quay lại</button>
+      <button class="btn btn-ghost" onclick="window.print()">🖨 In / Lưu PDF</button>
+      <button class="btn btn-primary" onclick="resetAll()">Đánh giá ca mới</button>
+    </div>
+  </section>
+
+  <!-- ====================== REFERENCE TABLES ====================== -->
+  <details>
+    <summary>📖 Bảng tham chiếu: Nhóm chuỗi bên R1 &amp; phản ứng chéo (Khan 2019, Figure 4)</summary>
+    <p class="hint">Tính sinh miễn dịch và phản ứng chéo của cephalosporin chủ yếu do <b>chuỗi bên R1</b> quyết định, không phải vòng β-lactam. Các thuốc <b>cùng nhóm R1</b> có nguy cơ phản ứng chéo cao; thuốc khác nhóm R1 thường dung nạp được.</p>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Nhóm R1</th><th>Cephalosporin</th><th>Penicillin chia sẻ R1</th><th>Ghi chú phản ứng chéo</th></tr></thead>
+      <tbody>
+        <tr><td><b>Nhóm 1</b><br>aminothiazol-methoxyimino</td><td>Ceftriaxone, Cefotaxime, Cefepime, Cefpodoxime, Cefditoren</td><td>—</td><td>Chéo lẫn nhau trong nhóm 1; có thể chéo với nhóm 2 &amp; 3</td></tr>
+        <tr><td><b>Nhóm 2</b><br>methoxyfuran</td><td>Cefuroxime</td><td>—</td><td>Có thể chéo với nhóm 1 &amp; 3</td></tr>
+        <tr><td><b>Nhóm 3</b><br>aminothiazol-carboxypropyl</td><td>Ceftazidime</td><td>—</td><td><b>Chia sẻ R1 với Aztreonam</b> → đây là ngoại lệ phản ứng chéo penicillin/ceph ↔ monobactam</td></tr>
+        <tr><td><b>Nhóm 4A</b><br>aminobenzyl</td><td>Cefaclor, Cephalexin</td><td><b>Ampicillin</b></td><td>Aminopenicillin chéo với ceph 1A</td></tr>
+        <tr><td><b>Nhóm 4B</b><br>amino-hydroxybenzyl</td><td>Cefadroxil, Cefprozil</td><td><b>Amoxicillin</b></td><td>Aminopenicillin chéo với ceph 4B</td></tr>
+        <tr><td><b>Nhóm 5</b></td><td>Cephalothin, Cefoxitin</td><td>—</td><td>—</td></tr>
+        <tr><td><b>Nhóm 6</b><br>R1 riêng biệt</td><td><b>Cefazolin</b></td><td>—</td><td>Chuỗi bên độc nhất → <b>không phản ứng chéo</b> với β-lactam khác; ngược lại dị ứng cefazolin không cấm dùng β-lactam khác</td></tr>
+        <tr><td>Aztreonam (monobactam)</td><td>—</td><td>—</td><td>Hầu như không chéo với penicillin/carbapenem; <b>chỉ</b> chéo với Ceftazidime (cùng R1)</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Tỷ lệ phản ứng chéo tổng quát: penicillin ↔ cephalosporin &lt; 2% (cao hơn nếu cùng R1); penicillin ↔ carbapenem &lt; 1%; penicillin ↔ aztreonam ≈ không đáng kể.</p>
+  </details>
+
+  <details>
+    <summary>💉 Nồng độ test da chuẩn không kích ứng (lẩy da → nội bì)</summary>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>Thuốc thử</th><th>Lẩy da (SPT)</th><th>Nội bì (IDT)</th></tr></thead>
+      <tbody>
+        <tr><td>Penicilloyl-polylysine (PPL, Pre-Pen) — quyết định chính</td><td>6×10⁻⁵ mol/L</td><td>6×10⁻⁵ mol/L</td></tr>
+        <tr><td>Minor determinant mixture (MDM) / Penicillin G</td><td>10.000 IU/mL</td><td>10.000 IU/mL</td></tr>
+        <tr><td>Amoxicillin</td><td>20 mg/mL</td><td>20 mg/mL</td></tr>
+        <tr><td>Ampicillin</td><td>20 mg/mL</td><td>20 mg/mL</td></tr>
+        <tr><td>Cephalosporin (ceftriaxone, cefuroxime, cefazolin, cefepime…)</td><td>2 mg/mL</td><td>2 mg/mL (tới 20 mg/mL nếu không kích ứng)</td></tr>
+        <tr><td>Chứng dương — Histamine</td><td>10 mg/mL</td><td>—</td></tr>
+        <tr><td>Chứng âm — NaCl 0,9%</td><td>✓</td><td>✓</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Đọc kết quả sau 15–20 phút. <b>Dương tính:</b> sẩn phù (wheal) ≥ 3 mm so với chứng âm kèm quầng đỏ. NPV của test da (kèm challenge) ≥ 95% với phản ứng tức thì. Test nội bì đọc muộn/patch test cho phản ứng muộn (độ nhạy thấp &lt; 40%).</p>
+  </details>
+
+  <ul class="ref" style="margin-top:18px;list-style:none;padding:0">
+    <li><b>Nguồn tham khảo (tài liệu trong thư mục):</b></li>
+    <li>1. Shenoy ES, Macy E, Rowe T, Blumenthal KG. Evaluation and Management of Penicillin Allergy: A Review. <i>JAMA</i> 2019;321(2):188-199.</li>
+    <li>2. Castells M, Khan DA, Phillips EJ. Penicillin Allergy. <i>N Engl J Med</i> 2019;381:2338-51.</li>
+    <li>3. Khan DA, Banerji A, Bernstein JA, et al. Cephalosporin Allergy: Current Understanding and Future Challenges. <i>J Allergy Clin Immunol Pract</i> 2019;7:2105-14.</li>
+    <li>4. Zagursky RJ, Pichichero ME. Cross-reactivity in β-Lactam Allergy. <i>J Allergy Clin Immunol Pract</i> 2018;6:72-81.</li>
+    <li>5. Siew LQC, et al. Identifying Low-Risk Beta-Lactam Allergy patients. <i>J Allergy Clin Immunol Pract</i> 2019.</li>
+    <li>6. Bottau P, et al. A practical management of children with antibiotic allergy. (Pediatric task force).</li>
+  </ul>
+</div>
+
+<script>
+/* ============== DRUG DATABASE: R1 side-chain groups ============== */
+const DRUGS = {
+  penicillinG:{name:'Penicillin G / V',cls:'Penicillin',r1:'benzyl'},
+  amoxicillin:{name:'Amoxicillin (± clavulanate)',cls:'Penicillin',r1:'amino4B'},
+  ampicillin:{name:'Ampicillin / Sulbactam',cls:'Penicillin',r1:'amino4A'},
+  piperacillin:{name:'Piperacillin / Tazobactam',cls:'Penicillin',r1:'piperacillin'},
+  oxacillin:{name:'Oxacillin / Cloxacillin',cls:'Penicillin',r1:'isoxazolyl'},
+  cefazolin:{name:'Cefazolin',cls:'Cephalosporin (G1)',r1:'cefazolin'},
+  cephalexin:{name:'Cephalexin (Cefalexin)',cls:'Cephalosporin (G1)',r1:'amino4A'},
+  cefadroxil:{name:'Cefadroxil',cls:'Cephalosporin (G1)',r1:'amino4B'},
+  cefaclor:{name:'Cefaclor',cls:'Cephalosporin (G2)',r1:'amino4A'},
+  cefprozil:{name:'Cefprozil',cls:'Cephalosporin (G2)',r1:'amino4B'},
+  cefuroxime:{name:'Cefuroxime',cls:'Cephalosporin (G2)',r1:'furG2'},
+  cefoxitin:{name:'Cefoxitin',cls:'Cephalosporin (G2)',r1:'G5'},
+  cefotaxime:{name:'Cefotaxime',cls:'Cephalosporin (G3)',r1:'moxG1'},
+  ceftriaxone:{name:'Ceftriaxone',cls:'Cephalosporin (G3)',r1:'moxG1'},
+  cefpodoxime:{name:'Cefpodoxime',cls:'Cephalosporin (G3)',r1:'moxG1'},
+  cefdinir:{name:'Cefdinir',cls:'Cephalosporin (G3)',r1:'moxG1'},
+  ceftazidime:{name:'Ceftazidime',cls:'Cephalosporin (G3)',r1:'cazG3'},
+  cefepime:{name:'Cefepime',cls:'Cephalosporin (G4)',r1:'moxG1'},
+  meropenem:{name:'Meropenem',cls:'Carbapenem',r1:'carbapenem'},
+  imipenem:{name:'Imipenem / Cilastatin',cls:'Carbapenem',r1:'carbapenem'},
+  ertapenem:{name:'Ertapenem',cls:'Carbapenem',r1:'carbapenem'},
+  aztreonam:{name:'Aztreonam',cls:'Monobactam',r1:'cazG3'}
+};
+const R1LABEL={benzyl:'benzyl',amino4A:'aminobenzyl (4A)',amino4B:'amino-hydroxybenzyl (4B)',
+  piperacillin:'riêng biệt',isoxazolyl:'isoxazolyl',cefazolin:'độc nhất (cefazolin)',
+  furG2:'methoxyfuran (2)',G5:'nhóm 5',moxG1:'aminothiazol-methoxyimino (1)',
+  cazG3:'aminothiazol-carboxypropyl (3)',carbapenem:'carbapenem'};
+
+/* reaction types */
+const REACTIONS=[
+  {v:'gi',risk:'low',t:'Triệu chứng tiêu hoá / đau đầu / triệu chứng đơn lẻ không gợi ý dị ứng',d:'Buồn nôn, tiêu chảy, đau đầu — không phải dị ứng'},
+  {v:'pruritus',risk:'low',t:'Ngứa đơn thuần, KHÔNG nổi ban',d:'Không có sang thương da'},
+  {v:'famhx',risk:'low',t:'Chỉ có tiền sử gia đình / chỉ được kể lại, bản thân chưa từng phản ứng',d:'Không có phản ứng thực sự ở bản thân'},
+  {v:'exanthem',risk:'mod',t:'Ban dát sẩn lành tính (benign maculopapular exanthem)',d:'Ban muộn nhẹ, không tổn thương niêm mạc/toàn thân'},
+  {v:'urticaria',risk:'mod',t:'Mày đay / phù mạch (có đặc điểm IgE nhưng KHÔNG phản vệ)',d:'Gợi ý cơ chế IgE mức độ vừa'},
+  {v:'anaphylaxis',risk:'high',t:'Phản vệ (anaphylaxis): tụt HA, khó thở/co thắt PQ, phù thanh quản, dùng adrenaline',d:'Phản ứng tức thì nặng đe doạ tính mạng'},
+  {v:'scar',risk:'avoid',t:'Phản ứng da nặng (SCAR): SJS/TEN, DRESS, AGEP',d:'CHỐNG CHỈ ĐỊNH test da & challenge'},
+  {v:'organ',risk:'avoid',t:'Tổn thương cơ quan đặc hiệu: viêm gan do thuốc, viêm thận kẽ cấp, thiếu máu/giảm tiểu cầu, bệnh huyết thanh',d:'CHỐNG CHỈ ĐỊNH dùng lại & challenge'}
+];
+
+let S={pop:'adult',index:'amoxicillin',reac:null,timing:null,recency:null,flags:[],risk:null,testNeeded:false,testResult:null};
+
+/* ---------- init UI ---------- */
+function buildSelect(){
+  const sel=document.getElementById('indexDrug');
+  let groups={Penicillin:[],'Cephalosporin':[],Carbapenem:[],Monobactam:[]};
+  for(const k in DRUGS){const c=DRUGS[k].cls.split(' ')[0];(groups[c]=groups[c]||[]).push([k,DRUGS[k].name]);}
+  sel.innerHTML='';
+  for(const g in groups){if(!groups[g].length)continue;const og=document.createElement('optgroup');og.label=g;
+    groups[g].forEach(([k,n])=>{const o=document.createElement('option');o.value=k;o.textContent=n;og.appendChild(o);});
+    sel.appendChild(og);}
+  sel.value='amoxicillin';sel.onchange=e=>S.index=e.target.value;
+}
+function buildReactions(){
+  const box=document.getElementById('reacType');
+  box.innerHTML=REACTIONS.map(r=>`<label class="opt"><input type="radio" name="reac" value="${r.v}">
+    <span><span class="ot">${r.t}</span><span class="od">${r.d}</span></span></label>`).join('');
+}
+document.getElementById('pop').onchange=e=>S.pop=e.target.value;
+
+/* selected styling */
+document.addEventListener('change',e=>{
+  if(e.target.matches('input[type=radio]')){
+    e.target.closest('.opt-grid').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+    e.target.closest('.opt').classList.add('sel');
+  }
+  if(e.target.matches('input[type=checkbox]')) e.target.closest('.opt').classList.toggle('sel',e.target.checked);
+});
+
+/* ---------- STEP 1 -> 2 ---------- */
+function goStep2(){
+  S.index=document.getElementById('indexDrug').value;
+  S.pop=document.getElementById('pop').value;
+  const reac=document.querySelector('input[name=reac]:checked');
+  if(!reac){alert('Vui lòng chọn kiểu phản ứng (mục 1).');return;}
+  S.reac=reac.value;
+  S.timing=(document.querySelector('input[name=timing]:checked')||{}).value||'unknown';
+  S.recency=(document.querySelector('input[name=recency]:checked')||{}).value||'mid';
+  S.flags=[...document.querySelectorAll('#flags input:checked')].map(c=>c.value);
+  computeRisk();
+  renderStep2();
+  show(2);
+}
+
+function computeRisk(){
+  const r=REACTIONS.find(x=>x.v===S.reac);
+  let risk=r.risk;
+  // upgrade by flags
+  if(['multi','priorpos','recur'].some(f=>S.flags.includes(f)) && risk!=='avoid') risk='high';
+  // unknown remote reaction with no IgE features -> low
+  if(S.reac && ['gi','pruritus','famhx'].includes(S.reac) && S.recency==='remote') risk='low';
+  S.risk=risk;
+  S.testNeeded=(risk==='mod'||risk==='high');
+}
+
+function renderStep2(){
+  const v=document.getElementById('riskVerdict');
+  const idx=DRUGS[S.index];
+  const map={
+    low:{cls:'v-low',h:'NGUY CƠ THẤP',
+      txt:`Tiền sử không gợi ý cơ chế dị ứng qua IgE. Theo JAMA 2019 / NEJM 2019: <b>không cần test da</b>. Có thể tiến hành <b>test kích thích uống trực tiếp (direct oral challenge)</b> với amoxicillin một liều (hoặc liều phân bậc), theo dõi 60 phút.`},
+    mod:{cls:'v-mod',h:'NGUY CƠ TRUNG BÌNH',
+      txt:`Phản ứng có đặc điểm IgE nhưng chưa tới mức phản vệ. Khuyến cáo <b>làm test da (lẩy da → nội bì)</b>; nếu âm tính thì test kích thích amoxicillin có giám sát.`},
+    high:{cls:'v-high',h:'NGUY CƠ CAO',
+      txt:`Tiền sử phản vệ / test da dương trước đây / phản ứng nhiều nhóm / tái diễn. <b>Bắt buộc test da do chuyên khoa Dị ứng thực hiện</b>, có sẵn phương tiện cấp cứu. Nếu âm tính → challenge phân bậc thận trọng. Nếu dương tính → tránh, cân nhắc giải mẫn cảm khi bắt buộc dùng.`},
+    avoid:{cls:'v-avoid',h:'CHỐNG CHỈ ĐỊNH TEST DA & CHALLENGE',
+      txt:`Phản ứng da nặng (SCAR) hoặc tổn thương cơ quan đặc hiệu. <b>KHÔNG</b> làm test da tức thì/challenge. Tránh tất cả β-lactam liên quan. Aztreonam thường là lựa chọn an toàn (trừ khi tiền sử với ceftazidime). Test áp/nội bì đọc muộn chỉ tại trung tâm chuyên sâu.`}
+  };
+  const m=map[S.risk];
+  v.innerHTML=`<div class="summary-box">Thuốc chỉ điểm: <b>${idx.name}</b> (${idx.cls}, chuỗi R1: ${R1LABEL[idx.r1]}) · Đối tượng: <b>${S.pop==='adult'?'Người lớn':'Trẻ em'}</b> · Thời điểm: ${({immediate:'tức thì',delayed:'muộn',unknown:'không rõ'})[S.timing]}</div>
+    <div class="verdict ${m.cls}"><h3>⚑ ${m.h}</h3><p>${m.txt}</p></div>`;
+
+  // test input area
+  const ti=document.getElementById('testInputArea');
+  if(S.risk==='avoid'){
+    ti.innerHTML=`<div class="block"><h4>Không nhập kết quả test</h4><p style="font-size:13.5px;margin:0">Bỏ qua bước test da. Bấm tiếp để xem danh sách kháng sinh thay thế an toàn.</p></div>`;
+    document.getElementById('toResultBtn').textContent='Xem kháng sinh thay thế →';
+  } else if(S.risk==='low'){
+    ti.innerHTML=`<div class="block"><h4>Test da không bắt buộc</h4>
+      <p style="font-size:13.5px">Bệnh nhân nguy cơ thấp có thể bỏ qua test da và làm challenge trực tiếp. Nếu anh/chị <b>vẫn làm test da</b>, chọn kết quả dưới đây (không bắt buộc):</p>
+      ${testRadios()}</div>`;
+    document.getElementById('toResultBtn').textContent='Xem khuyến cáo kháng sinh →';
+  } else {
+    ti.innerHTML=`<div class="block"><h4>Nhập kết quả test da (lẩy da &amp; nội bì) với thuốc chỉ điểm / quyết định penicillin</h4>
+      <p style="font-size:13px;color:var(--muted)">Dương tính = sẩn phù ≥ 3 mm so với chứng âm sau 15–20 phút.</p>
+      ${testRadios()}</div>`;
+    document.getElementById('toResultBtn').textContent='Xem khuyến cáo kháng sinh →';
+  }
+}
+function testRadios(){
+  return `<div class="opt-grid">
+    <label class="opt"><input type="radio" name="test" value="neg"><span><span class="ot">Âm tính (cả lẩy da &amp; nội bì)</span><span class="od">Gợi ý KHÔNG còn mẫn cảm IgE</span></span></label>
+    <label class="opt"><input type="radio" name="test" value="pos"><span><span class="ot">Dương tính</span><span class="od">Xác nhận dị ứng β-lactam qua IgE</span></span></label>
+    <label class="opt"><input type="radio" name="test" value="notdone"><span><span class="ot">Chưa làm / không làm được</span><span class="od">VD: da vẽ nổi, đang dùng kháng histamine</span></span></label>
+  </div>`;
+}
+
+/* ---------- STEP 2 -> 3 ---------- */
+function goStep3(){
+  if(S.risk!=='avoid'){
+    const t=document.querySelector('input[name=test]:checked');
+    S.testResult = t? t.value : (S.risk==='low'?'notdone':null);
+    if(S.risk!=='low' && !t){alert('Vui lòng chọn kết quả test da, hoặc "chưa làm".');return;}
+  } else S.testResult='na';
+  renderResult();
+  show(3);
+}
+
+/* ---------- cross-reactivity engine ---------- */
+function classify(candidateKey){
+  const idx=DRUGS[S.index], c=DRUGS[candidateKey];
+  if(candidateKey===S.index) return {lvl:'red',why:'Chính là thuốc đã gây phản ứng'};
+  const sameR1 = idx.r1===c.r1 && !['benzyl','carbapenem','piperacillin','isoxazolyl'].includes(idx.r1);
+  // identical side chain = highest cross-reactivity regardless of class
+  if(sameR1) return {lvl:'red',why:`Cùng chuỗi bên R1 (${R1LABEL[idx.r1]}) → nguy cơ phản ứng chéo cao`};
+  const idxCls=idx.cls.split(' ')[0], cCls=c.cls.split(' ')[0];
+
+  // monobactam
+  if(cCls==='Monobactam'){ // aztreonam, different R1 already (idx not cazG3)
+    return {lvl:'green',why:'Aztreonam hầu như không phản ứng chéo (chỉ chéo với ceftazidime cùng R1)'};
+  }
+  if(idxCls==='Monobactam'){ // index = aztreonam
+    if(c.r1==='cazG3') return {lvl:'red',why:'Cùng R1 với aztreonam (ceftazidime)'};
+    return {lvl:'green',why:'Không chia sẻ R1 với aztreonam'};
+  }
+  // carbapenem either side
+  if(cCls==='Carbapenem'||idxCls==='Carbapenem')
+    return {lvl:'amber',why:'Phản ứng chéo penicillin/ceph ↔ carbapenem < 1% → có thể dùng qua challenge phân bậc'};
+  // cefazolin unique
+  if(c.r1==='cefazolin') return {lvl:'green',why:'Cefazolin có R1 độc nhất → không phản ứng chéo'};
+  if(idx.r1==='cefazolin') return {lvl:'green',why:'Dị ứng cefazolin (R1 độc nhất) không cấm β-lactam khác'};
+
+  // pen <-> ceph, different R1
+  if((idxCls==='Penicillin'&&cCls==='Cephalosporin')||(idxCls==='Cephalosporin'&&cCls==='Penicillin'))
+    return {lvl:'green',why:'Khác chuỗi bên R1 → phản ứng chéo penicillin↔cephalosporin chung < 2%'};
+  // same class different R1
+  if(idxCls===cCls) return {lvl:'amber',why:'Cùng nhóm nhưng khác R1 → nguy cơ thấp; cân nhắc test/challenge'};
+  return {lvl:'green',why:'Khác nhóm, khác R1 → nguy cơ thấp'};
+}
+
+function renderResult(){
+  const idx=DRUGS[S.index];
+  let out='', allergyConfirmed=false, delabeled=false;
+
+  // ---- interpretation header ----
+  if(S.risk==='avoid'){
+    out+=verdict('v-avoid','Tránh β-lactam liên quan — không challenge',
+      `Bệnh nhân có tiền sử phản ứng nặng (SCAR/tổn thương cơ quan). Tránh tất cả β-lactam chia sẻ cấu trúc với <b>${idx.name}</b>. Không dùng lại trừ khi có chỉ định sống còn và hội chẩn chuyên khoa.`);
+    allergyConfirmed=true;
+  } else if(S.testResult==='pos'){
+    out+=verdict('v-high','Dị ứng β-lactam qua IgE — ĐÃ XÁC NHẬN bằng test da',
+      `Test da dương tính khẳng định mẫn cảm IgE. Tránh <b>${idx.name}</b> và các thuốc cùng chuỗi bên R1. Nếu bắt buộc dùng thuốc dương tính → <b>giải mẫn cảm (desensitization)</b>.`);
+    allergyConfirmed=true;
+  } else if(S.testResult==='neg'){
+    out+=verdict('v-low','Test da ÂM TÍNH — tiến hành test kích thích xác nhận',
+      `Test da âm tính có NPV ≥ 95%. Hoàn tất chẩn đoán bằng <b>test kích thích amoxicillin có giám sát</b>; nếu dung nạp → <b>gỡ nhãn dị ứng (de-label)</b> và có thể dùng β-lactam bình thường.`);
+    delabeled=true;
+  } else if(S.risk==='low'){
+    out+=verdict('v-low','Nguy cơ thấp — test kích thích trực tiếp',
+      `Không cần test da. <b>Test kích thích uống amoxicillin trực tiếp</b> (1 liều, theo dõi 60 phút). Nếu dung nạp → gỡ nhãn dị ứng penicillin.`);
+    delabeled=true;
+  } else { // notdone, mod/high
+    out+=verdict('v-mod','Chưa có kết quả test — phân tầng theo tiền sử',
+      `Chưa khẳng định được tình trạng dị ứng. Khuyến cáo hoàn tất test da ± challenge trước khi gỡ nhãn. Trong thời gian chờ, ưu tiên kháng sinh <b>khác chuỗi bên R1</b> dưới đây.`);
+  }
+
+  // ---- antibiotic recommendation ----
+  if(delabeled){
+    out+=`<div class="block"><h4>✅ Hướng xử trí kháng sinh</h4>
+      <p style="font-size:13.6px;margin:0 0 6px">Sau khi gỡ nhãn (challenge âm tính), bệnh nhân có thể dùng <b>toàn bộ nhóm β-lactam</b> bình thường, bao gồm cả ${idx.name}. Cập nhật lại hồ sơ dị ứng.</p></div>`;
+  }
+  if(allergyConfirmed || S.testResult==='notdone'){
+    out+=buildAbxTable();
+    // special callouts
+    out+=`<div class="block"><h4>🔑 Điểm an toàn chính</h4><ul class="clean">
+      <li><b>Cefazolin</b> có chuỗi bên R1 độc nhất → lựa chọn cephalosporin an toàn ở hầu hết bệnh nhân dị ứng penicillin (và ngược lại).</li>
+      <li><b>Aztreonam</b> an toàn ở dị ứng penicillin/carbapenem; <b>ngoại lệ duy nhất</b>: dị ứng <b>ceftazidime</b> (cùng R1 nhóm 3).</li>
+      <li><b>Carbapenem</b> (meropenem, imipenem, ertapenem): phản ứng chéo &lt; 1% → có thể dùng qua test kích thích phân bậc nếu cần.</li>
+      <li>Với aminopenicillin (amox/ampicillin), tránh cephalosporin <b>cùng R1</b> (cephalexin, cefadroxil, cefaclor, cefprozil); các cephalosporin thế hệ 2–4 khác R1 thường dung nạp.</li>
+    </ul></div>`;
+  }
+
+  // pediatric note
+  if(S.pop==='child'){
+    out+=`<div class="block" style="border-color:#cfe0f5;background:#f6faff"><h4>👶 Lưu ý nhi khoa</h4><ul class="clean">
+      <li>Phần lớn ban ở trẻ dùng aminopenicillin là <b>ban do virus / ban muộn lành tính</b>, không phải dị ứng thật.</li>
+      <li>Trẻ tiền sử phản ứng <b>không tức thì, mức độ nhẹ</b> với amoxicillin: nhiều phác đồ cho <b>challenge uống trực tiếp/phân bậc</b> mà không cần test da.</li>
+      <li>Chỉ định test da/giải mẫn cảm tương tự người lớn cho phản ứng tức thì nặng. Tránh hoàn toàn nếu SCAR.</li>
+    </ul></div>`;
+  }
+
+  // next steps box
+  out+=`<div class="block"><h4>📋 Bước tiếp theo gợi ý</h4><ul class="clean">${nextSteps(allergyConfirmed,delabeled)}</ul></div>`;
+  out+=`<p class="note">Công cụ tham khảo — quyết định cuối cùng theo lâm sàng và nguồn lực sẵn có tại cơ sở.</p>`;
+  document.getElementById('result').innerHTML=out;
+}
+
+function buildAbxTable(){
+  const order=['penicillinG','amoxicillin','ampicillin','piperacillin','oxacillin',
+    'cefazolin','cephalexin','cefadroxil','cefaclor','cefprozil','cefuroxime','cefoxitin',
+    'cefotaxime','ceftriaxone','cefpodoxime','cefdinir','ceftazidime','cefepime',
+    'meropenem','imipenem','ertapenem','aztreonam'];
+  let g={green:[],amber:[],red:[]};
+  order.forEach(k=>{const r=classify(k);g[r.lvl].push({k,...r});});
+  const sec=(arr,cls,dot,head,sub)=>{
+    if(!arr.length)return'';
+    return `<div class="abx-group"><div class="abx-head"><span class="dot ${dot}"></span>${head} <span style="font-weight:400;color:var(--muted)">— ${sub}</span></div>
+      ${arr.map(x=>`<span class="pill ${cls}"><b>${DRUGS[x.k].name}</b><span>${x.why}</span></span>`).join('')}</div>`;
+  };
+  return `<div class="block"><h4>💊 Gợi ý lựa chọn kháng sinh tiếp theo</h4>
+    ${sec(g.green,'p-green','d-green','CÓ THỂ DÙNG','nguy cơ phản ứng chéo thấp')}
+    ${sec(g.amber,'p-amber','d-amber','THẬN TRỌNG','dùng qua test kích thích phân bậc / cân nhắc test da')}
+    ${sec(g.red,'p-red','d-red','TRÁNH','cùng chuỗi bên R1 hoặc chính thuốc gây dị ứng')}
+  </div>`;
+}
+function nextSteps(confirmed,delabeled){
+  if(delabeled) return `<li>Ghi rõ "đã gỡ nhãn dị ứng penicillin sau challenge âm tính" vào hồ sơ.</li><li>Giáo dục bệnh nhân: có thể dùng penicillin/β-lactam khi cần.</li>`;
+  if(confirmed) return `<li>Ghi nhãn dị ứng β-lactam cụ thể + cơ chế (IgE/SCAR) vào hồ sơ.</li>
+    <li>Khi cần kháng sinh: ưu tiên nhóm "CÓ THỂ DÙNG"; nếu buộc dùng nhóm "THẬN TRỌNG" → test kích thích phân bậc có giám sát.</li>
+    <li>Nếu bắt buộc dùng đúng thuốc dị ứng → <b>giải mẫn cảm</b> theo phác đồ.</li>
+    <li>Cấp thẻ/ghi chú cảnh báo dị ứng cho bệnh nhân.</li>`;
+  return `<li>Sắp xếp test da (lẩy da → nội bì) ± test kích thích để khẳng định/loại trừ.</li>
+    <li>Trong khi chờ: chọn kháng sinh nhóm "CÓ THỂ DÙNG" (khác R1).</li>`;
+}
+
+/* ---------- helpers ---------- */
+function verdict(cls,h,t){return `<div class="verdict ${cls}"><h3>${h}</h3><p>${t}</p></div>`;}
+function show(n){
+  [1,2,3].forEach(i=>document.getElementById('step'+i).classList.toggle('hidden',i!==n));
+  [1,2,3].forEach(i=>document.getElementById('ps'+i).classList.toggle('on',i<=n));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function backTo(n){show(n);}
+function resetAll(){
+  S={pop:'adult',index:'amoxicillin',reac:null,timing:null,recency:null,flags:[],risk:null,testNeeded:false,testResult:null};
+  document.querySelectorAll('input[type=radio],input[type=checkbox]').forEach(i=>i.checked=false);
+  document.querySelectorAll('.opt.sel').forEach(o=>o.classList.remove('sel'));
+  document.getElementById('pop').value='adult';
+  document.getElementById('indexDrug').value='amoxicillin';
+  show(1);
+}
+buildSelect();buildReactions();
+</script>
+</body>
+</html>
