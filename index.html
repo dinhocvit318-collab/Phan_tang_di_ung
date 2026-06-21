@@ -310,6 +310,27 @@ const REACTIONS=[
 
 let S={pop:'adult',index:'amoxicillin',reac:null,timing:null,recency:null,flags:[],risk:null,testNeeded:false,testResult:null};
 
+/* ---- Kế hoạch chẩn đoán tuỳ theo NHÓM thuốc chỉ điểm ---- */
+function dxPlan(){
+  const idx=DRUGS[S.index], cls=idx.cls.split(' ')[0], n=idx.name;
+  if(cls==='Penicillin'){
+    const ch = /Amox/i.test(n)? 'amoxicillin' : (/Ampi/i.test(n)? 'ampicillin' : 'amoxicillin');
+    return {st:`quyết định penicillin chuẩn (PPL + MDM / penicillin G) <b>kèm ${n}</b> (20 mg/mL)`,
+      ch:ch, chFull:`test kích thích uống <b>${ch}</b> có giám sát`, label:'penicillin'};
+  }
+  if(cls==='Cephalosporin'){
+    return {st:`<b>chính ${n}</b> (2 mg/mL, tăng tới 20 mg/mL nếu không kích ứng); có thể test thêm quyết định penicillin để đánh giá phản ứng chéo`,
+      ch:n, chFull:`test kích thích với <b>${n}</b> (hoặc một β-lactam <b>khác chuỗi bên R1</b> nếu chỉ cần tìm thuốc thay thế an toàn)`,
+      label:`cephalosporin (${n})`};
+  }
+  if(cls==='Carbapenem'){
+    return {st:`<b>${n}</b> (dạng pha loãng); có thể test thêm quyết định penicillin`,
+      ch:n, chFull:`test kích thích phân bậc với <b>${n}</b>`, label:`carbapenem (${n})`};
+  }
+  return {st:`<b>${n}</b> (chưa chuẩn hoá, tính sinh miễn dịch thấp)`,
+    ch:n, chFull:`test kích thích với <b>${n}</b>`, label:'aztreonam'};
+}
+
 /* ---------- init UI ---------- */
 function buildSelect(){
   const sel=document.getElementById('indexDrug');
@@ -366,11 +387,12 @@ function computeRisk(){
 function renderStep2(){
   const v=document.getElementById('riskVerdict');
   const idx=DRUGS[S.index];
+  const P=dxPlan();
   const map={
     low:{cls:'v-low',h:'NGUY CƠ THẤP',
-      txt:`Tiền sử không gợi ý cơ chế dị ứng qua IgE. Theo JAMA 2019 / NEJM 2019: <b>không cần test da</b>. Có thể tiến hành <b>test kích thích uống trực tiếp (direct oral challenge)</b> với amoxicillin một liều (hoặc liều phân bậc), theo dõi 60 phút.`},
+      txt:`Tiền sử không gợi ý cơ chế dị ứng qua IgE. Theo JAMA 2019 / NEJM 2019: <b>không cần test da</b>. Có thể tiến hành <b>test kích thích trực tiếp (direct challenge)</b> với ${P.chFull} một liều (hoặc liều phân bậc), theo dõi 60 phút.`},
     mod:{cls:'v-mod',h:'NGUY CƠ TRUNG BÌNH',
-      txt:`Phản ứng có đặc điểm IgE nhưng chưa tới mức phản vệ. Khuyến cáo <b>làm test da (lẩy da → nội bì)</b>; nếu âm tính thì test kích thích amoxicillin có giám sát.`},
+      txt:`Phản ứng có đặc điểm IgE nhưng chưa tới mức phản vệ. Khuyến cáo <b>làm test da (lẩy da → nội bì) với ${P.st}</b>; nếu âm tính thì ${P.chFull}.`},
     high:{cls:'v-high',h:'NGUY CƠ CAO',
       txt:`Tiền sử phản vệ / test da dương trước đây / phản ứng nhiều nhóm / tái diễn. <b>Bắt buộc test da do chuyên khoa Dị ứng thực hiện</b>, có sẵn phương tiện cấp cứu. Nếu âm tính → challenge phân bậc thận trọng. Nếu dương tính → tránh, cân nhắc giải mẫn cảm khi bắt buộc dùng.`},
     avoid:{cls:'v-avoid',h:'CHỐNG CHỈ ĐỊNH TEST DA & CHALLENGE',
@@ -391,8 +413,8 @@ function renderStep2(){
       ${testRadios()}</div>`;
     document.getElementById('toResultBtn').textContent='Xem khuyến cáo kháng sinh →';
   } else {
-    ti.innerHTML=`<div class="block"><h4>Nhập kết quả test da (lẩy da &amp; nội bì) với thuốc chỉ điểm / quyết định penicillin</h4>
-      <p style="font-size:13px;color:var(--muted)">Dương tính = sẩn phù ≥ 3 mm so với chứng âm sau 15–20 phút.</p>
+    ti.innerHTML=`<div class="block"><h4>Nhập kết quả test da (lẩy da &amp; nội bì)</h4>
+      <p style="font-size:13px;color:var(--muted)">Thuốc thử khuyến nghị: ${P.st}.<br>Dương tính = sẩn phù ≥ 3 mm so với chứng âm sau 15–20 phút.</p>
       ${testRadios()}</div>`;
     document.getElementById('toResultBtn').textContent='Xem khuyến cáo kháng sinh →';
   }
@@ -450,6 +472,7 @@ function classify(candidateKey){
 
 function renderResult(){
   const idx=DRUGS[S.index];
+  const P=dxPlan();
   let out='', allergyConfirmed=false, delabeled=false;
 
   // ---- interpretation header ----
@@ -463,11 +486,11 @@ function renderResult(){
     allergyConfirmed=true;
   } else if(S.testResult==='neg'){
     out+=verdict('v-low','Test da ÂM TÍNH — tiến hành test kích thích xác nhận',
-      `Test da âm tính có NPV ≥ 95%. Hoàn tất chẩn đoán bằng <b>test kích thích amoxicillin có giám sát</b>; nếu dung nạp → <b>gỡ nhãn dị ứng (de-label)</b> và có thể dùng β-lactam bình thường.`);
+      `Test da âm tính có NPV ≥ 95%. Hoàn tất chẩn đoán bằng ${P.chFull}; nếu dung nạp → <b>gỡ nhãn dị ứng ${P.label} (de-label)</b>.`);
     delabeled=true;
   } else if(S.risk==='low'){
     out+=verdict('v-low','Nguy cơ thấp — test kích thích trực tiếp',
-      `Không cần test da. <b>Test kích thích uống amoxicillin trực tiếp</b> (1 liều, theo dõi 60 phút). Nếu dung nạp → gỡ nhãn dị ứng penicillin.`);
+      `Không cần test da. <b>Test kích thích trực tiếp</b> với ${P.chFull} (1 liều, theo dõi 60 phút). Nếu dung nạp → gỡ nhãn dị ứng ${P.label}.`);
     delabeled=true;
   } else { // notdone, mod/high
     out+=verdict('v-mod','Chưa có kết quả test — phân tầng theo tiền sử',
@@ -477,7 +500,7 @@ function renderResult(){
   // ---- antibiotic recommendation ----
   if(delabeled){
     out+=`<div class="block"><h4>✅ Hướng xử trí kháng sinh</h4>
-      <p style="font-size:13.6px;margin:0 0 6px">Sau khi gỡ nhãn (challenge âm tính), bệnh nhân có thể dùng <b>toàn bộ nhóm β-lactam</b> bình thường, bao gồm cả ${idx.name}. Cập nhật lại hồ sơ dị ứng.</p></div>`;
+      <p style="font-size:13.6px;margin:0 0 6px">Sau khi gỡ nhãn (challenge âm tính), bệnh nhân có thể <b>dùng lại ${idx.name}</b> bình thường. Các β-lactam <b>khác chuỗi bên R1</b> vốn đã ở mức nguy cơ thấp. Cập nhật lại hồ sơ dị ứng.</p></div>`;
   }
   if(allergyConfirmed || S.testResult==='notdone'){
     out+=buildAbxTable();
@@ -524,7 +547,8 @@ function buildAbxTable(){
   </div>`;
 }
 function nextSteps(confirmed,delabeled){
-  if(delabeled) return `<li>Ghi rõ "đã gỡ nhãn dị ứng penicillin sau challenge âm tính" vào hồ sơ.</li><li>Giáo dục bệnh nhân: có thể dùng penicillin/β-lactam khi cần.</li>`;
+  const P=dxPlan();
+  if(delabeled) return `<li>Ghi rõ "đã gỡ nhãn dị ứng ${P.label} sau challenge âm tính" vào hồ sơ.</li><li>Giáo dục bệnh nhân: có thể dùng lại thuốc đã được kiểm chứng khi cần.</li>`;
   if(confirmed) return `<li>Ghi nhãn dị ứng β-lactam cụ thể + cơ chế (IgE/SCAR) vào hồ sơ.</li>
     <li>Khi cần kháng sinh: ưu tiên nhóm "CÓ THỂ DÙNG"; nếu buộc dùng nhóm "THẬN TRỌNG" → test kích thích phân bậc có giám sát.</li>
     <li>Nếu bắt buộc dùng đúng thuốc dị ứng → <b>giải mẫn cảm</b> theo phác đồ.</li>
